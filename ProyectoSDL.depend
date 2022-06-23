@@ -1,11 +1,14 @@
 # depslib dependency file v1.0
-1655690548 source:c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\main.c
+1655926391 source:c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdbool.h>
 	<SDL2/SDL.h>
 	<windows.h>
 	<SDL2/SDL_image.h>
+	<assert.h>
+	<time.h>
+	"list.h"
 
 1650910406 c:\users\badu0\onedrive\escritorio\sdl2-2.0.22\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -385,13 +388,13 @@
 	"begin_code.h"
 	"close_code.h"
 
-1653169442 source:c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\list.c
+1655901407 source:c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\list.c
 	<stdio.h>
 	<stdlib.h>
 	<assert.h>
 	"list.h"
 
-1653169442 c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\list.h
+1655901407 c:\users\badu0\onedrive\escritorio\aaa\proyectosdl\list.h
 
 1561870398 c:\users\badu0\onedrive\escritorio\sdl2-2.0.22\x86_64-w64-mingw32\include\sdl2\sdl_image.h
 	"SDL.h"

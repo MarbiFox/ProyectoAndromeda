@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <windows.h>
+#include <SDL2/SDL_image.h>
+#include <assert.h>
+#include <time.h>
+#include "list.h"
 
 #define MenuInicio 1
 #define MenuFin 5
@@ -11,13 +15,23 @@
 typedef struct Nave Nave;
 typedef struct Misil Misil;
 typedef struct Punto Punto;
+typedef struct Entidad Entidad;
+typedef struct Usuario Usuario;
 void navePintar(Nave*,SDL_Renderer*);
 void naveIzquierdaDerecha(Nave*);
 void naveDispara(Nave*);
 void misilAvanza(Misil *);
 void borrarMisiles(Misil *);
 void dibujarlineaInferior(Punto *,SDL_Renderer *);
+void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect *);
+void entidadMover();
 void goy(int);
+
+struct Usuario{
+    char user[4];
+    int puntaje;
+};
+
 
 struct Misil{
     int x1,y1;
@@ -43,12 +57,162 @@ struct Punto{
     int x2,y2;
 };
 
-int SDL(){
+struct Entidad{
+    int vida;
+    int x1,y1;
+    int velocidad_x,velocidad_y;
+    Misil *misiles;
+};
+
+typedef struct{
+    // seconds,  range 0 to 59
+    int tm_sec;
+
+    // minutes, range 0 to 59
+    int tm_min;
+
+    // hours, range 0 to 23
+    int tm_hour;
+
+    // day of the month, range 1 to 31
+    int tm_mday;
+
+    // month, range 0 to 11
+    int tm_mon;
+
+    // The number of years since 1900
+    int tm_year;
+
+    // day of the week, range 0 to 6
+    int tm_wday;
+
+    // day in the year, range 0 to 365
+    int tm_yday;
+
+    // daylight saving time
+    int tm_isdst;
+}tm;
+
+unsigned int convertNum(char *val){
+
+    //convierte los characteres en numeros
+
+    int aux = 0;
+    int digit = 0;
+    int i = 0;
+
+    while(*(val + i) != '\0'){
+        digit *= 10;
+        aux = (int) (*(val + i) - '0');
+        digit += aux;
+        i++;
+    }
+    return digit;
+}
+
+char* buscarPalabra (FILE *f) {
+
+    //busca una palabra en el archivo
+
+    char x[1024];
+    if (fscanf(f, " %1023s", x) == 1)
+        return strdup(x);
+    else
+    return NULL;
+}
+
+void insertarListaRanking(List* list,Usuario* data){
+
+    /*inserta una varible usario(nombre y puntaje)  a la lista de manera que quede ordenada de mayor a menor
+    ESTA FUNCION SOLO QUEDARA ORDENADA SI LA LISTA ESTA VACIA POR LO CUAL SE DEBEN INSERTAR LOS ELEMENTOS UNO POR UNO*/
+
+    assert(list != NULL);
+    Node * new = createNode(data);
+
+    if(list->head==NULL){
+        pushFront(list,data);
+        return;
+    }
+
+    firstList(list);
+    Usuario* current=list->current->data;
+
+    while(current){
+
+        if (current->puntaje<data->puntaje)
+        {
+            if(list->current==list->head){
+                pushFront(list,data);
+                break;
+            }else{
+                prevList(list);
+                pushCurrent(list,data);
+                break;
+            }
+        }
+
+        if (list->current->next==NULL)
+        {
+            pushBack(list,data);
+            return;
+        }
+
+        nextList(list);
+
+        current=list->current->data;
+    }
+
+}
+
+List* obtenerRanking(){
+
+    /*obtiene los datos globales de los resultados de quienes han jugado el juego y sus puntajes
+    para esto se lee el archivo ranking.txt el cual esta ordenada de esta manera:
+
+        [ALIAS][PUNTAJE]
+            ABC 123
+            BCA 321
+            BAC 213
+
+    CABE RECALCAR QUE EL ORDEN EN QUE SE GUARDEN LOS USUARIOS NO IMPORTA YA QUE UTILISA LA FUNCION insertarListaRanking() la cual ordena de manera automatica cuando se ingresa*/
+
+    List* l=createList();
+
+    FILE *rank;
+    rank=fopen("rankings.txt","r");
+    if(rank==NULL){
+        printf("error al abrir el archivo\n");
+        return 1;
+    }
+
+
+    char* alias=buscarPalabra(rank);
+    int score=0;
+
+
+    while (alias) {
+
+        Usuario *d=(Usuario*)malloc(sizeof(Usuario));
+
+        strcpy(d->user,alias);
+        d->puntaje=convertNum(buscarPalabra(rank));
+
+        insertarListaRanking(l,d);
+
+        alias=buscarPalabra(rank);
+    }
+    printf("[FUNCION OBTENER RANKINGS]\n");
+    system("pause");
+    fclose(rank);
+    return l;
+
+}
+
+void SDL(){
     SDL_Window *window = NULL;
-    //SDL_Surface *windowSurface = NULL;
     SDL_Renderer *renderer = NULL;
 
-    int largo = 480;
+    int largo = 580;
     int ancho = 640;
     int size_x = 650;
     int size_y = 850;
@@ -61,25 +225,44 @@ int SDL(){
     window = SDL_CreateWindow("Ventana",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ancho,largo,SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
     //windowSurface = SDL_GetWindowSurface(window);
-
     //TTF_Font*sans = TTF_OpenFont("sans.ttf",24);
 
-    //Punto linea = {size_x/2+330,size_y/2+20,size_x/2-330,size_y/2+20};
+    Punto linea = {size_x/2+360,size_y/2-350,size_x/2-360,size_y/2-350};
 
     SDL_Event event;
     bool running = true;
     const unsigned char *keys = SDL_GetKeyboardState(NULL);
     int typeEvent;
 
-    //imagenes
 
-    Nave nave = {size_x/2,size_y/2,
-                size_x/2+5,size_y/2+10,
-                size_x/2+20,size_y/2+10,
-                size_x/2+20,size_y/2+20,
-                size_x/2-20,size_y/2+20,
-                size_x/2-20,size_y/2+10,
-                size_x/2-5,size_y/2+10,5,5,NULL};
+    Nave nave = {size_x/2,size_y/2+70,
+                size_x/2+5,size_y/2+80,
+                size_x/2+20,size_y/2+80,
+                size_x/2+20,size_y/2+90,
+                size_x/2-20,size_y/2+90,
+                size_x/2-20,size_y/2+80,
+                size_x/2-5,size_y/2+80,5,5,NULL};
+
+    int flag = IMG_Init(IMG_INIT_JPG);
+    int initStatus = IMG_Init(flag);
+    if ((initStatus && flag) != flag){
+        printf("ERROR\n");
+    }
+    SDL_Surface *image;
+    image = IMG_Load("invader.jpg");
+    if (!image){
+        printf("IMG_LOAD: %s",IMG_GetError());
+    }
+    SDL_Surface *image2;
+    image2 = IMG_Load("invader2.jpg");
+    if (!image2){
+        printf("IMG_LOAD: %s",IMG_GetError());
+    }
+
+    SDL_Texture *imagen2 = SDL_CreateTextureFromSurface(renderer,image2);
+    SDL_Texture *imagen1 = SDL_CreateTextureFromSurface(renderer,image);
+    SDL_Rect *texture_destination;
+
 
     if (window == NULL){
         printf("ERROR");
@@ -108,26 +291,35 @@ int SDL(){
                     naveDispara(&nave);
                 }
             }
-
-
             borrarMisiles(nave.misiles);
 
             SDL_UpdateWindowSurface(window);
+
             SDL_SetRenderDrawColor(renderer,0,0,0,0);
+
             SDL_RenderClear(renderer);
+
+            moverEntidades(renderer,imagen1,imagen2,texture_destination);
+
+            //SDL_RenderCopy(renderer,imagen1,NULL,&texture_destination);
+
             SDL_SetRenderDrawColor(renderer,0,255,12,0);
+
             navePintar(&nave,renderer);
 
-            SDL_RenderDrawPoint(renderer,100,100);
 
-            //dibujarlineaInferior(&linea,renderer);
-
+            dibujarlineaInferior(&linea,renderer);
             SDL_RenderPresent(renderer);
+
+
             SDL_Delay(10);
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_FreeSurface(image);
+    SDL_DestroyTexture(imagen1);
     SDL_Quit();
+    IMG_Quit();
 }
 
 void navePintar(Nave *nave,SDL_Renderer *renderer){
@@ -225,6 +417,75 @@ void dibujarlineaInferior(Punto *punto,SDL_Renderer *renderer){
     SDL_RenderDrawLines(renderer,points,3);
 }
 
+void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *texture_destination){
+
+    int posicion_x = 100;
+    int posicion_y = 140;
+    int width = 25;
+    int length = 25;
+
+
+    int posicion2_x = 100;
+    int posicion2_y = 140;
+    int width2 = 25;
+    int length2 = 25;
+
+    texture_destination->x = posicion_x;
+    texture_destination->y = posicion_y;
+    texture_destination->w = width;
+    texture_destination->h = length;
+
+    /*
+    for (int i = 0 ; i < 11 ; i++){
+        for (int j = 0 ; j < 5 ; j++){
+            posicion_y += 35;
+            texture_destination->x = posicion_x;
+            texture_destination->y = posicion_y;
+            SDL_RenderCopy(renderer,imagen1,NULL,texture_destination);
+
+        }
+
+        posicion_y = 140;
+        posicion_x += 40;
+    }
+    */
+    for (int i = 0 ; i < 11 ; i++){
+        texture_destination->x = posicion_x;
+        texture_destination->y = posicion_y;
+        SDL_RenderCopy(renderer,imagen1,NULL,texture_destination);
+        if (i%2 == 0){
+            SDL_Delay(5);
+            SDL_RenderCopy(renderer,imagen2,NULL,texture_destination);
+        }
+        posicion_x += 40;
+    }
+
+    //Probando
+
+
+
+    /*
+    tm *ptr = NULL;
+    time_t t;
+    t = time(NULL);
+    printf("%s",asctime(ptr));
+    */
+
+    /*
+    unsigned int lastTime = 0;
+    unsigned int currentTime;
+    currentTime = SDL_GetTicks();
+    if (currentTime > lastTime) {
+        printf("Report: %d\n", currentTime);
+        lastTime = currentTime;
+    }
+    */
+}
+
+void ententidadMover(){
+
+}
+
 //FUNCION MENU PRINCIPAL
 void Menu(){
     system("COLOR 9");
@@ -239,6 +500,8 @@ void Menu(){
     menu = 1;
     goy(LineaDeInicio);
     printf("---->");
+
+
 
     while (1){
         Sleep(200);
@@ -271,10 +534,10 @@ void Menu(){
     }
     if (menu == 3){
         system("pause");
-        printf("[FUNCION DIFICULTAD]");
+        //printf("[FUNCION DIFICULTAD]");
     }
     if (menu == 4){
-        system("pause");
+        obtenerRanking();
         printf("[FUNCION MOSTRAR RANKINGS]");
     }
     if (menu == 5){

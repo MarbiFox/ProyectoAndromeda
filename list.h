@@ -5,6 +5,17 @@ typedef struct Node Node;
 
 typedef struct List List;
 
+struct List {
+    Node * head;
+    Node * tail;
+    Node * current;
+};
+
+struct Node {
+    void * data;
+    Node * next;
+    Node * prev;
+};
 /*Crear nodo*/
 Node * createNode(void * data);
 

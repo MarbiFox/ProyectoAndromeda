@@ -38,6 +38,8 @@
 			<Add library="SDL2" />
 			<Add directory="../../SDL2-2.0.22/x86_64-w64-mingw32/lib" />
 		</Linker>
+		<Unit filename="invader.jpg" />
+		<Unit filename="invader2.jpg" />
 		<Unit filename="list.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -45,6 +47,7 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="rankings.txt" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

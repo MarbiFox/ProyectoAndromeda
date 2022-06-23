@@ -5,19 +5,10 @@
 
 typedef struct Node Node;
 
-struct Node {
-    void * data;
-    Node * next;
-    Node * prev;
-};
 
 typedef List List;
 
-struct List {
-    Node * head;
-    Node * tail;
-    Node * current;
-};
+
 
 Node * createNode(void * data) {
     Node * new = (Node *)malloc(sizeof(Node));
