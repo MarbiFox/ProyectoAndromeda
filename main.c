@@ -25,7 +25,11 @@ void borrarMisiles(Misil *);
 void dibujarlineaInferior(Punto *,SDL_Renderer *);
 void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect *);
 void entidadMover();
+void moverEntidadDerecha();
 void goy(int);
+
+UINT64 Time();
+UINT64 startTime;
 
 struct Usuario{
     char user[4];
@@ -64,34 +68,7 @@ struct Entidad{
     Misil *misiles;
 };
 
-typedef struct{
-    // seconds,  range 0 to 59
-    int tm_sec;
 
-    // minutes, range 0 to 59
-    int tm_min;
-
-    // hours, range 0 to 23
-    int tm_hour;
-
-    // day of the month, range 1 to 31
-    int tm_mday;
-
-    // month, range 0 to 11
-    int tm_mon;
-
-    // The number of years since 1900
-    int tm_year;
-
-    // day of the week, range 0 to 6
-    int tm_wday;
-
-    // day in the year, range 0 to 365
-    int tm_yday;
-
-    // daylight saving time
-    int tm_isdst;
-}tm;
 
 unsigned int convertNum(char *val){
 
@@ -269,6 +246,25 @@ void SDL(){
         return EXIT_FAILURE;
     }
 
+    startTime = SDL_GetTicks64();
+    SDL_Rect screenRectangle = {0,0,580,640};
+    SDL_Rect imageRectangle = {100,150,30,30};
+
+    int cont = 0;
+
+    Entidad **matriz = (Entidad**)malloc(5 * sizeof(Entidad*));
+
+    for (int i = 0 ; i < 5 ; i++){
+        matriz[i] = (Entidad*)malloc(11 * sizeof(Entidad));
+    }
+    Entidad naveEnemiga;
+
+    for (int i = 0 ; i < 5 ; i++){
+        for (int j = 0 ; j < 11 ; j++){
+            matriz[i][j] = naveEnemiga;
+        }
+    }
+
     while (running){
         while (SDL_PollEvent(&event)){
                 if (event.type == SDL_QUIT){
@@ -293,13 +289,34 @@ void SDL(){
             }
             borrarMisiles(nave.misiles);
 
+            float time = Time() / 1000.f;
+
+            //imageRectangle.x = Time() * 0.1f;
+
             SDL_UpdateWindowSurface(window);
 
             SDL_SetRenderDrawColor(renderer,0,0,0,0);
 
             SDL_RenderClear(renderer);
 
-            moverEntidades(renderer,imagen1,imagen2,texture_destination);
+
+            if ((int)time % 2 == 0){
+                if(cont % 2 != 0){
+                    imageRectangle.x += 5;
+                    cont++;
+                }
+                SDL_RenderCopy(renderer,imagen1,&screenRectangle,&imageRectangle);
+            }
+            else
+            {
+                if(cont % 2 == 0){
+                    imageRectangle.x += 5;
+                    cont++;
+                }
+                SDL_RenderCopy(renderer,imagen2,&screenRectangle,&imageRectangle);
+            }
+
+            //moverEntidades(renderer,imagen1,imagen2,texture_destination);
 
             //SDL_RenderCopy(renderer,imagen1,NULL,&texture_destination);
 
@@ -308,7 +325,7 @@ void SDL(){
             navePintar(&nave,renderer);
 
 
-            dibujarlineaInferior(&linea,renderer);
+            //dibujarlineaInferior(&linea,renderer);
             SDL_RenderPresent(renderer);
 
 
@@ -419,11 +436,11 @@ void dibujarlineaInferior(Punto *punto,SDL_Renderer *renderer){
 
 void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *texture_destination){
 
+    /*
     int posicion_x = 100;
     int posicion_y = 140;
     int width = 25;
     int length = 25;
-
 
     int posicion2_x = 100;
     int posicion2_y = 140;
@@ -435,7 +452,7 @@ void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *ima
     texture_destination->w = width;
     texture_destination->h = length;
 
-    /*
+
     for (int i = 0 ; i < 11 ; i++){
         for (int j = 0 ; j < 5 ; j++){
             posicion_y += 35;
@@ -449,37 +466,18 @@ void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *ima
         posicion_x += 40;
     }
     */
-    for (int i = 0 ; i < 11 ; i++){
-        texture_destination->x = posicion_x;
-        texture_destination->y = posicion_y;
-        SDL_RenderCopy(renderer,imagen1,NULL,texture_destination);
-        if (i%2 == 0){
-            SDL_Delay(5);
-            SDL_RenderCopy(renderer,imagen2,NULL,texture_destination);
-        }
-        posicion_x += 40;
-    }
 
-    //Probando
+    //Necesito crear para cada nave un cuadrado, luego en cada cuadrado sobreescribir la imagen 1
+    SDL_Rect rect;
+    rect.x = 100;
+    rect.y = 140;
+    rect.h = 25;
+    rect.w = 25;
+    SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
+    SDL_RenderFillRect( renderer, &rect);
+    SDL_RenderPresent(renderer);
 
 
-
-    /*
-    tm *ptr = NULL;
-    time_t t;
-    t = time(NULL);
-    printf("%s",asctime(ptr));
-    */
-
-    /*
-    unsigned int lastTime = 0;
-    unsigned int currentTime;
-    currentTime = SDL_GetTicks();
-    if (currentTime > lastTime) {
-        printf("Report: %d\n", currentTime);
-        lastTime = currentTime;
-    }
-    */
 }
 
 void ententidadMover(){
@@ -558,6 +556,14 @@ void goy(int y){
     pos.X = 0;
     pos.Y = y;
     SetConsoleCursorPosition(hConsole, pos);
+}
+
+UINT64 Time(){
+    return SDL_GetTicks64() - startTime;
+}
+
+void moverEntidadDerecha(){
+
 }
 
 int main(int argc, char **argv){
