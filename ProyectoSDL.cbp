@@ -40,6 +40,9 @@
 		</Linker>
 		<Unit filename="invader.jpg" />
 		<Unit filename="invader2.jpg" />
+		<Unit filename="invader3.jpg" />
+		<Unit filename="invader4.jpg" />
+		<Unit filename="invader5.jpg" />
 		<Unit filename="list.c">
 			<Option compilerVar="CC" />
 		</Unit>

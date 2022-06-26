@@ -23,7 +23,7 @@ void naveDispara(Nave*);
 void misilAvanza(Misil *);
 void borrarMisiles(Misil *);
 void dibujarlineaInferior(Punto *,SDL_Renderer *);
-void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect *);
+void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect* ,Entidad**,int*,int*,int*,int*);
 void entidadMover();
 void moverEntidadDerecha();
 void goy(int);
@@ -62,9 +62,8 @@ struct Punto{
 };
 
 struct Entidad{
+    SDL_Rect rectangulo;
     int vida;
-    int x1,y1;
-    int velocidad_x,velocidad_y;
     Misil *misiles;
 };
 
@@ -191,6 +190,7 @@ void SDL(){
 
     int largo = 580;
     int ancho = 640;
+
     int size_x = 650;
     int size_y = 850;
 
@@ -220,24 +220,29 @@ void SDL(){
                 size_x/2-20,size_y/2+80,
                 size_x/2-5,size_y/2+80,5,5,NULL};
 
+    //CARGAR IMAGENES INVADER1 INVADER2
+
     int flag = IMG_Init(IMG_INIT_JPG);
+
     int initStatus = IMG_Init(flag);
     if ((initStatus && flag) != flag){
         printf("ERROR\n");
     }
     SDL_Surface *image;
+
     image = IMG_Load("invader.jpg");
     if (!image){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
     SDL_Surface *image2;
+
     image2 = IMG_Load("invader2.jpg");
     if (!image2){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
 
-    SDL_Texture *imagen2 = SDL_CreateTextureFromSurface(renderer,image2);
     SDL_Texture *imagen1 = SDL_CreateTextureFromSurface(renderer,image);
+    SDL_Texture *imagen2 = SDL_CreateTextureFromSurface(renderer,image2);
     SDL_Rect *texture_destination;
 
 
@@ -257,14 +262,28 @@ void SDL(){
     for (int i = 0 ; i < 5 ; i++){
         matriz[i] = (Entidad*)malloc(11 * sizeof(Entidad));
     }
-    Entidad naveEnemiga;
 
+
+    int eje_x = 110;
+    int eje_y = 100;
+
+    int direccion_x = 1;
+    int direccion_y = 1;
+    int inicio = 1;
+
+    //Inicializar
     for (int i = 0 ; i < 5 ; i++){
         for (int j = 0 ; j < 11 ; j++){
-            matriz[i][j] = naveEnemiga;
+            matriz[i][j].rectangulo.x = eje_x;
+            matriz[i][j].rectangulo.y = eje_y;
+            matriz[i][j].rectangulo.h = 25;
+            matriz[i][j].rectangulo.w = 25;
+            matriz[i][j].vida = 1;
+            eje_x += 40;
         }
+        eje_x = 110;
+        eje_y += 50;
     }
-
     while (running){
         while (SDL_PollEvent(&event)){
                 if (event.type == SDL_QUIT){
@@ -289,51 +308,27 @@ void SDL(){
             }
             borrarMisiles(nave.misiles);
 
-            float time = Time() / 1000.f;
-
-            //imageRectangle.x = Time() * 0.1f;
-
             SDL_UpdateWindowSurface(window);
 
             SDL_SetRenderDrawColor(renderer,0,0,0,0);
 
             SDL_RenderClear(renderer);
 
-
-            if ((int)time % 2 == 0){
-                if(cont % 2 != 0){
-                    imageRectangle.x += 5;
-                    cont++;
-                }
-                SDL_RenderCopy(renderer,imagen1,&screenRectangle,&imageRectangle);
-            }
-            else
-            {
-                if(cont % 2 == 0){
-                    imageRectangle.x += 5;
-                    cont++;
-                }
-                SDL_RenderCopy(renderer,imagen2,&screenRectangle,&imageRectangle);
-            }
-
-            //moverEntidades(renderer,imagen1,imagen2,texture_destination);
-
-            //SDL_RenderCopy(renderer,imagen1,NULL,&texture_destination);
+            moverEntidades(renderer,imagen1,imagen2,&screenRectangle,matriz,&cont,&direccion_x,&direccion_y,&inicio);
 
             SDL_SetRenderDrawColor(renderer,0,255,12,0);
 
             navePintar(&nave,renderer);
 
-
             //dibujarlineaInferior(&linea,renderer);
             SDL_RenderPresent(renderer);
-
 
             SDL_Delay(10);
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_FreeSurface(image);
+    SDL_FreeSurface(image2);
     SDL_DestroyTexture(imagen1);
     SDL_Quit();
     IMG_Quit();
@@ -362,14 +357,35 @@ void navePintar(Nave *nave,SDL_Renderer *renderer){
 }
 
 void naveIzquierdaDerecha(Nave *nave){
-    nave->x1 += nave->velocidad_x;
-    nave->x2 += nave->velocidad_x;
-    nave->x3 += nave->velocidad_x;
-    nave->x4 += nave->velocidad_x;
-    nave->x5 += nave->velocidad_x;
-    nave->x6 += nave->velocidad_x;
-    nave->x7 += nave->velocidad_x;
 
+    if (nave->x5 > 5 && nave->x3 < 640){
+        nave->x1 += nave->velocidad_x;
+        nave->x2 += nave->velocidad_x;
+        nave->x3 += nave->velocidad_x;
+        nave->x4 += nave->velocidad_x;
+        nave->x5 += nave->velocidad_x;
+        nave->x6 += nave->velocidad_x;
+        nave->x7 += nave->velocidad_x;
+    }
+    //BORDES
+    if (nave->x5 == 5){
+        nave->x1 -= nave->velocidad_x;
+        nave->x2 -= nave->velocidad_x;
+        nave->x3 -= nave->velocidad_x;
+        nave->x4 -= nave->velocidad_x;
+        nave->x5 -= nave->velocidad_x;
+        nave->x6 -= nave->velocidad_x;
+        nave->x7 -= nave->velocidad_x;
+    }
+    if (nave->x3 == 635){
+        nave->x1 -= nave->velocidad_x;
+        nave->x2 -= nave->velocidad_x;
+        nave->x3 -= nave->velocidad_x;
+        nave->x4 -= nave->velocidad_x;
+        nave->x5 -= nave->velocidad_x;
+        nave->x6 -= nave->velocidad_x;
+        nave->x7 -= nave->velocidad_x;
+    }
 }
 
 void naveDispara(Nave *nave){
@@ -433,49 +449,91 @@ void dibujarlineaInferior(Punto *punto,SDL_Renderer *renderer){
     points[2] = points[0];
     SDL_RenderDrawLines(renderer,points,3);
 }
-
-void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *texture_destination){
-
-    /*
-    int posicion_x = 100;
-    int posicion_y = 140;
-    int width = 25;
-    int length = 25;
-
-    int posicion2_x = 100;
-    int posicion2_y = 140;
-    int width2 = 25;
-    int length2 = 25;
-
-    texture_destination->x = posicion_x;
-    texture_destination->y = posicion_y;
-    texture_destination->w = width;
-    texture_destination->h = length;
+void mover(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **Matriz,int*cont){
 
 
-    for (int i = 0 ; i < 11 ; i++){
-        for (int j = 0 ; j < 5 ; j++){
-            posicion_y += 35;
-            texture_destination->x = posicion_x;
-            texture_destination->y = posicion_y;
-            SDL_RenderCopy(renderer,imagen1,NULL,texture_destination);
+}
 
+void mover_ejeX(Entidad **matriz,int *direccion_x){
+    for(int i = 0 ; i < 5 ; i++){
+        for (int j = 0 ; j < 11; j++){
+            if ((*direccion_x) == 1){
+                matriz[i][j].rectangulo.x += 8;
+            }
+            else{
+                matriz[i][j].rectangulo.x -= 8;
+            }
         }
-
-        posicion_y = 140;
-        posicion_x += 40;
     }
-    */
+}
 
-    //Necesito crear para cada nave un cuadrado, luego en cada cuadrado sobreescribir la imagen 1
-    SDL_Rect rect;
-    rect.x = 100;
-    rect.y = 140;
-    rect.h = 25;
-    rect.w = 25;
-    SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-    SDL_RenderFillRect( renderer, &rect);
-    SDL_RenderPresent(renderer);
+void mover_ejeY(Entidad **matriz,int *direccion_x){
+    for (int i = 0 ; i < 5 ; i++){
+        for (int j = 0 ; j < 11 ; j++){
+            if ((*direccion_x) == 1){
+                matriz[i][j].rectangulo.x -= 8;
+                matriz[i][j].rectangulo.y += 10;
+            }
+            else{
+                matriz[i][j].rectangulo.x += 8;
+                matriz[i][j].rectangulo.y += 10;
+            }
+        }
+    }
+}
+
+void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **matriz,int*cont,int *direccion_x,int *direccion_y,int *inicio){
+
+    //FUNCIONAAAAAA
+    //13
+
+    float time = Time() / 1000.f;
+    for (int i = 0 ; i < 5 ; i++){
+        for (int j = 0 ; j < 11 ; j++){
+
+            if ((int)time % 2 == 0){
+                if((*cont) % 2 != 0){
+                    mover_ejeX(matriz,direccion_x);
+                    (*cont)++;
+                }
+                //CASO INICIO
+                if ((*cont) == 12 && (*inicio) == 1){
+                    mover_ejeY(matriz,direccion_x);
+                    (*direccion_x) *= -1;
+                    (*cont) = 0;
+                    (*inicio) = 0;
+                }
+                //CASO PROMEDIO
+                if ((*cont) == 24){
+                    mover_ejeY(matriz,direccion_x);
+                    (*direccion_x) *= -1;
+                    (*cont) = 0;
+                }
+                SDL_RenderCopy(renderer,imagen1,screenRectangle,&matriz[i][j].rectangulo);
+            }
+            else
+            {
+                if((*cont) % 2 == 0){
+                    mover_ejeX(matriz,direccion_x);
+                    (*cont)++;
+                }
+                //CASO INICIO
+                if ((*cont) == 12 && (*inicio) == 1){
+                    mover_ejeY(matriz,direccion_x);
+                    (*direccion_x) *= -1;
+                    (*cont) = 0;
+                    (*inicio) = 0;
+                }
+                //CASO PROMEDIO
+                if ((*cont) == 24){
+                    mover_ejeY(matriz,direccion_x);
+                    (*direccion_x) *= -1;
+                    (*cont) = 0;
+                }
+                SDL_RenderCopy(renderer,imagen2,screenRectangle,&matriz[i][j].rectangulo);
+            }
+        }
+    }
 
 
 }
