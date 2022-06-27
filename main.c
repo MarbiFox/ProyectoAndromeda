@@ -15,7 +15,7 @@
 #define Largo 580
 #define Ancho 640
 
-#define MAX 1000
+#define MAX 10000
 #define SIZE 100
 #define NUMS_TO_GENERATE 1
 
@@ -34,7 +34,7 @@ void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect* ,Entida
 void entidadMover();
 void moverEntidadDerecha();
 void goy(int);
-void disparoEntidades(Entidad **);
+void disparoEntidades(Entidad **,SDL_Renderer*);
 
 UINT64 Time();
 UINT64 startTime;
@@ -75,6 +75,7 @@ struct Entidad{
     int vida;
     bool permitidoDisparar;
     int razonDisparo;
+
     Misil *misiles;
 };
 
@@ -294,7 +295,6 @@ void SDL(){
             matriz[i][j].permitidoDisparar = false;
             if (i == 4){
                 matriz[i][j].permitidoDisparar = true;
-
             }
             eje_x += 40;
         }
@@ -336,7 +336,7 @@ void SDL(){
 
             navePintar(&nave,renderer,matriz);
 
-            //disparoEntidades(matriz);
+            disparoEntidades(matriz,renderer);
 
 
             //dibujarlineaInferior(&linea,renderer);
@@ -389,13 +389,10 @@ void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz){
                         if (coordenadaEjeY <= auxMisil->y1 && coordenadaEjeY+25 >= auxMisil->y1){
 
                             //ELIMINAR
-
                             auxMisil->x1 = 0;
                             auxMisil->y1 = 0;
                             auxMisil->x2 = 0;
                             auxMisil->y2 = 0;
-
-
 
                             matriz[i][j].vida = 0;
 
@@ -405,13 +402,11 @@ void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz){
                                 auxMisil->siguiente->x2 = 0;
                                 auxMisil->siguiente->y2 = 0;
                             }
-
                         }
                     }
                 }
             }
         }
-        //printf("(%d,%d)\n",auxMisil->x1,auxMisil->y1);
         auxMisil = auxMisil->siguiente;
     }
 }
@@ -544,16 +539,45 @@ void mover_ejeY(Entidad **matriz,int *direccion_x){
     }
 }
 
+float velocidadEntidades(){
+    float time = Time() / 1000.f;
+    //AUMENTAR VELOCIDAD
+    if ((int)time > 10){
+        time *= 1.2;
+    }
+    if ((int)time > 20){
+        time *= 1.2;
+    }
+    if ((int)time > 30){
+        time *= 1.2;
+    }
+    if ((int)time > 40){
+        time *= 1.2;
+    }
+    if ((int)time > 50){
+        time *= 1.2;
+    }
+    if ((int)time > 60){
+        time *= 1.2;
+    }
+    if ((int)time > 120){
+        time *= 1.6;
+    }
+    if ((int)time > 210){
+        time *= 1.9;
+    }
+    if ((int)time > 500){
+        time *= 2.2;
+    }
+    return time;
+}
+
+
 void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **matriz,int*cont,int *direccion_x,int *direccion_y,int *inicio){
 
-    //FUNCIONAAAAAA
-    //13
-
-
-    float time = Time() / 1000.f;
+    float time = velocidadEntidades();
     for (int i = 0 ; i < 5 ; i++){
         for (int j = 0 ; j < 11 ; j++){
-
             if ((int)time % 2 == 0){
                 if((*cont) % 2 != 0){
                     mover_ejeX(matriz,direccion_x);
@@ -601,11 +625,52 @@ void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *ima
             }
         }
     }
+    if ((int)time > 2){
+
+    }
 }
 
-void disparoEntidades(Entidad **matriz){
-    for (int i = 0; i < NUMS_TO_GENERATE; i++){
-        printf("%d\n", rand() % MAX);
+void crearDisparoEntidad(Entidad *naveEnemiga){
+    if (naveEnemiga->misiles == NULL){
+        naveEnemiga->misiles = (Misil*)SDL_malloc(sizeof(Misil));
+        naveEnemiga->misiles->x1 = naveEnemiga->rectangulo.x;
+        naveEnemiga->misiles->y1 = naveEnemiga->rectangulo.y;
+        naveEnemiga->misiles->x2 = naveEnemiga->rectangulo.x;
+        naveEnemiga->misiles->y2 = naveEnemiga->rectangulo.y - 5;
+        naveEnemiga->misiles->velocidad_x = 0;
+        naveEnemiga->misiles->velocidad_y = -5;
+        naveEnemiga->misiles->siguiente = NULL;
+    }
+    else{
+        Misil *auxMisil = naveEnemiga->misiles;
+        while (auxMisil->siguiente != NULL){
+            auxMisil = auxMisil->siguiente;
+        }
+        auxMisil->siguiente = (Misil*)SDL_malloc(sizeof(Misil));
+        auxMisil = auxMisil->siguiente;
+        auxMisil->x1 = naveEnemiga->rectangulo.x;
+        auxMisil->y1 = naveEnemiga->rectangulo.y;
+        auxMisil->x2 = naveEnemiga->rectangulo.x;
+        auxMisil->y2 = naveEnemiga->rectangulo.y - 5;
+        auxMisil->velocidad_x = 0;
+        auxMisil->velocidad_y = -5;
+        auxMisil->siguiente = NULL;
+    }
+}
+
+void disparoEntidades(Entidad **matriz,SDL_Renderer *renderer){
+    for (int i = 0 ; i < 5 ; i++){
+        for (int j = 0 ; j < 11 ; j++){
+            if (matriz[i][j].permitidoDisparar == true){
+                matriz[i][j].razonDisparo = rand() % MAX;
+
+                //CREAR DISPAROS
+                if (matriz[i][j].razonDisparo < 4){
+                    printf("[DISPARO ENEMIGO]\n");
+                    //crearDisparoEntidad(&matriz[i][j]);
+                }
+            }
+        }
     }
 }
 
