@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
-#include <windows.h>
-#include <SDL2/SDL_image.h>
-#include <assert.h>
 #include <time.h>
 #include "list.h"
 
@@ -167,12 +160,10 @@ List* obtenerRanking(){
 
     /*obtiene los datos globales de los resultados de quienes han jugado el juego y sus puntajes
     para esto se lee el archivo ranking.txt el cual esta ordenada de esta manera:
-
         [ALIAS][PUNTAJE]
             ABC 123
             BCA 321
             BAC 213
-
     CABE RECALCAR QUE EL ORDEN EN QUE SE GUARDEN LOS USUARIOS NO IMPORTA YA QUE UTILISA LA FUNCION insertarListaRanking() la cual ordena de manera automatica cuando se ingresa*/
 
     List* l=createList();
@@ -181,7 +172,6 @@ List* obtenerRanking(){
     rank=fopen("rankings.txt","r");
     if(rank==NULL){
         printf("error al abrir el archivo\n");
-        return 1;
     }
 
 
@@ -414,24 +404,21 @@ void dibujarMisilesBoss(Entidad *boss,Nave*naveUsuario,SDL_Renderer *renderer,Us
     }
 }
 
-void SDL(){
-
+void startGame(){
+    //Crear Usuario y Render para Usuario.
     Usuario *user = crearUsuario();
-    SDL_Window *window = NULL;
+    SDL_Window * window = NULL;
     SDL_Renderer *renderer = NULL;
 
+    //Definir Límites de Pantalla.
     int largo = 580;
     int ancho = 640;
-
+    
+    //Definir Límites de Nave.
     int size_x = 650;
     int size_y = 850;
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0){
-        printf("ERROR\n");
-        return EXIT_FAILURE;
-    }
-
-    window = SDL_CreateWindow("Ventana",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ancho,largo,SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Galactic Madness",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ancho,largo,SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
     Punto linea = {size_x/2+360,size_y/2+50,size_x/2-360,size_y/2+50};
 
@@ -448,31 +435,26 @@ void SDL(){
                 size_x/2-20,size_y/2+80,
                 size_x/2-5,size_y/2+80,10,10,NULL};
 
-    //CARGAR IMAGENES INVADER1 INVADER2
-    int flag = IMG_Init(IMG_INIT_JPG);
-    int initStatus = IMG_Init(flag);
-    if ((initStatus && flag) != flag){
-        printf("ERROR\n");
-    }
+    
     SDL_Surface *image;
-    image = IMG_Load("invader.jpg");
+    image = IMG_Load("npc./invader.jpg");
     if (!image){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
     SDL_Surface *image2;
-    image2 = IMG_Load("invader2.jpg");
+    image2 = IMG_Load("npc./invader2.jpg");
     if (!image2){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
 
     SDL_Surface *image3;
-    image3 = IMG_Load("slave00.jpg");
+    image3 = IMG_Load("npc./slave00.jpg");
     if (!image3){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
 
     SDL_Surface *image4;
-    image4 = IMG_Load("slave01.jpg");
+    image4 = IMG_Load("npc./slave01.jpg");
     if (!image4){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
@@ -486,7 +468,7 @@ void SDL(){
 
     if (window == NULL){
         printf("ERROR");
-        return EXIT_FAILURE;
+        return;
     }
 
     SDL_Rect screenRectangle = {0,0,580,640};
@@ -1092,72 +1074,7 @@ void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *ima
 
     }
 }
-//FUNCION MENU PRINCIPAL
-void Menu(){
-    system("COLOR 9");
-    int menu;
-    printf("--------PROTOTIPO MENU BASICO--------v1.0\n");
-    goy(LineaDeInicio);
-    printf("\t[1]Jugar\n");
-    printf("\t[2]Dificultad\n");
-    printf("\t[3]Tutorial\n");
-    printf("\t[4]Rankings\n");
-    printf("\t[5]Salir\n");
-    menu = 1;
-    goy(LineaDeInicio);
-    printf("---->");
 
-
-
-    while (1){
-        Sleep(200);
-        if(GetAsyncKeyState(VK_UP)){
-            menu == MenuInicio ? MenuFin: --menu;
-            printf("\r     ");
-            goy(LineaDeInicio + menu-1);
-            printf("---->");
-        }
-        else{
-            if (GetAsyncKeyState(VK_DOWN)){
-                menu == MenuFin ? MenuInicio: ++menu;
-                printf("\r     ");
-                goy(LineaDeInicio + menu-1);
-                printf("---->");
-            }
-            else{
-                if (GetAsyncKeyState(VK_RETURN)){break;}
-            }
-        }
-    }
-    printf("\n\n\n\n");
-    if (menu == 1){
-        SDL();
-    }
-    if (menu == 2){
-        system("pause");
-
-        printf("[FUNCION DIFICULTAD]");
-    }
-    if (menu == 3){
-        system("pause");
-        //printf("[FUNCION DIFICULTAD]");
-    }
-    if (menu == 4){
-        obtenerRanking();
-        printf("[FUNCION MOSTRAR RANKINGS]");
-    }
-    if (menu == 5){
-        printf("Opcion 5");
-    }
-
-    //CAMBIAR MENU A UNO MAS BONITO
-    /*
-    switch (menu){
-    case 1:
-        Ventana(argc,argv);
-    case 2:
-    */
-}
 void goy(int y){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD pos;
@@ -1168,10 +1085,4 @@ void goy(int y){
 
 UINT64 Time(){
     return SDL_GetTicks64();
-}
-
-int main(int argc, char **argv){
-
-    Menu();
-    return EXIT_SUCCESS;
 }

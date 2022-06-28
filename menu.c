@@ -5,28 +5,18 @@
 #include <SDL2/SDL_image.h>
 #include <windows.h>
 #include <assert.h>
-#include <time.h>
-#include "list.h"
+#include "main.c"
 
-
-SDL_Surface * loadImage (char * filePath) {
-
-    SDL_Surface * surface = IMG_Load(filePath);
-    if (surface == NULL) {
-        printf("Error: %s\n", SDL_GetError());
-    }
-
-    return surface;
-}
-
+//Función carga una imagen y la ajusta a las proporciones de la ventana.
 SDL_Surface * optimizeSurface (char * filePath, SDL_Surface * mSurface) {
-
+    //Cargar imagen en una superficie.
     SDL_Surface * optimizedSurface = NULL;
     SDL_Surface * surface = IMG_Load(filePath);
     if (surface == NULL) {
         printf("Error: %s\n", SDL_GetError());
     }
     else {
+        //Ajustar la imagen a la ventana.
         optimizedSurface = SDL_ConvertSurface(surface, mSurface->format, 0);
         if (optimizedSurface == NULL) {
             printf("Error: %s\n", SDL_GetError());
@@ -37,11 +27,12 @@ SDL_Surface * optimizeSurface (char * filePath, SDL_Surface * mSurface) {
     return optimizedSurface;
 }
 
+//Función que ejecuta acciones según la opción escogida por el usuario.
 void startOption (int option, bool * runGame) {
     switch (option)
     {
     case 1:
-        // startGame();
+        startGame();
         break;
     case 2:
         // showRankings();
@@ -55,6 +46,39 @@ void startOption (int option, bool * runGame) {
     }
 }
 
+//Función que prepara las actualizaciones de pantalla para cada opción.
+char ** createOptions (char * fileName) {
+    //Crear Arreglo de Opciones:
+    char ** options;
+    options = (char**) malloc (4*sizeof(char*));
+    for (int i = 0; i < 4; i++) {
+        options[i] = (char*) malloc (20*sizeof(char));
+    }
+
+    //Llenar Arreglo:
+    for (int k = 1; k < 5; k++) {
+        switch (k) {
+        case 1:
+            fileName = "ScreenMenu./OP1.jpg";
+            break;
+        case 2:
+            fileName = "ScreenMenu./OP2.jpg";
+            break;
+        case 3:
+            fileName = "ScreenMenu./OP3.jpg";
+            break;
+        case 4:
+            fileName = "ScreenMenu./OP4.jpg";
+            break;
+        
+        }
+        options[k-1] = fileName;
+    }
+
+    return options;
+}
+
+//Función directoria y Principal del Programa.
 void createMenu () {
     //Iniciar SDL
     SDL_Init (SDL_INIT_VIDEO);
@@ -65,17 +89,9 @@ void createMenu () {
     }
 
     //Crear Ventana, Textura Principal y Render Principal.
-    SDL_Window * window = SDL_CreateWindow("MainMenu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 580, SDL_WINDOW_SHOWN);
+    SDL_Window * window = SDL_CreateWindow("Galatic Madness", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 580, SDL_WINDOW_SHOWN);
     SDL_Surface * mainSurface = SDL_GetWindowSurface(window);
-    SDL_Renderer * renderer = NULL;
     SDL_Surface * button = NULL;
-
-    //Declarar Timer.
-    float frameTime = 0; //Tiempo Transcurrido.
-    int prevTime = 0;    //Tiempo del Frame Pasado.
-    int currentTime = 0; //Tiempo del Frame Actual.
-    float deltaTime = 0; //Diferencia de Tiempo entre el Frame Actual y el Pasado.
-    int milisec = 0; //Contador entero para eventos. (Cuenta Milisegundos).
 
     //Definir Límites de la Ventana.
     SDL_Rect windowLimit;
@@ -89,45 +105,13 @@ void createMenu () {
     SDL_BlitScaled(button, NULL, mainSurface, &windowLimit);
     SDL_UpdateWindowSurface(window);
 
-    //Crear Arreglo de Opciones:
-    char ** optionMenu;
-    optionMenu = (char**) malloc (4*sizeof(char*));
-    for (int i = 0; i < 4; i++) {
-        optionMenu[i] = (char*) malloc (20*sizeof(char));
-    }
-
-
-    //Llenar Arreglo:
-    char * fileName = "ScreenMenu./OP0.jpg";
-    printf("%s\n", fileName);
-    for (int k = 1; k < 5; k++) {
-        switch (k) {
-        case 1:
-            fileName = "ScreenMenu./OP1.jpg";
-            printf("%s\n", fileName);
-            break;
-        case 2:
-            fileName = "ScreenMenu./OP2.jpg";
-            printf("%s\n", fileName);
-            break;
-        case 3:
-            fileName = "ScreenMenu./OP3.jpg";
-            printf("%s\n", fileName);
-            break;
-        case 4:
-            fileName = "ScreenMenu./OP4.jpg";
-            printf("%s\n", fileName);
-            break;
-        
-        }
-        optionMenu[k-1] = fileName;
-    }
-
     //Establecer que la aplicación está corriendo
     bool isRunning = true;
     //Crear un evento. (Cuando algo ocurre de forma externa).
     SDL_Event mainEv;
-    printf("msdklana");
+
+    //Crear opciones de Pantalla:
+    char ** optionMenu = createOptions(filePath); 
     
     //Iniciar el Arreglo de opciones para el menú.
     int currentScreen = -1;
@@ -135,11 +119,11 @@ void createMenu () {
     //Ciclo de Ejecución del programa principal (Ventana). Ejecuta la ventana mientras isRunning sea True.
     while (isRunning) {
 
-        while (SDL_PollEvent(&mainEv) != 0) { // Marca si el usuario pulsó una tecla o click.
+        while (SDL_PollEvent(&mainEv) != 0) { // Marca cualquier interacción con la ventana.
             if(mainEv.type == SDL_QUIT) { //Marca si se pulsó el ícono de salir.
                 isRunning = false;
             }
-            else if (mainEv.type == SDL_KEYDOWN) { //keyDown es para pulsar, keyup es para mantener y soltar.
+            else if (mainEv.type == SDL_KEYDOWN) { //keyDown marca si se pulsa una tecla.
                 switch (mainEv.key.keysym.sym)
                 {
                 case SDLK_DOWN:
@@ -163,11 +147,12 @@ void createMenu () {
                     }
                     break;
                 case SDLK_RETURN:
-                    printf("potato");
                     if (currentScreen == -1) {
                         currentScreen += 1;
                     }
                     else {
+                        SDL_FreeSurface(button);
+                        SDL_DestroyWindow(window);
                         startOption(currentScreen+1, &isRunning);
                     }
                     break;
@@ -183,8 +168,6 @@ void createMenu () {
                 
             }
         }
-        
-        // printf("%d\n", currentScreen);
     }
     
     //Liberar memoria de los componentes.
