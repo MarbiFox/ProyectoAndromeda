@@ -44,6 +44,7 @@ void iniciarMisiles();
 void dibujarMisilesEntidades(Entidad*,SDL_Renderer*,int*,Nave*,Usuario*);
 void asignarPuntaje(Usuario*,int);
 void misilAvanzaEntidad(Misil*);
+void colisionDisparo_Usuario(Entidad *,Nave *,Usuario *);
 
 UINT64 Time();
 
@@ -230,7 +231,7 @@ Entidad *memoriaBoss(){
 
 void inicializarBoss(Entidad *boss){
     boss->rectangulo.x = 280;
-    boss->rectangulo.y = 30;
+    boss->rectangulo.y = 10;
     boss->rectangulo.h = 80;
     boss->rectangulo.w = 80;
     boss->vida = 3;
@@ -465,13 +466,13 @@ void SDL(){
     }
 
     SDL_Surface *image3;
-    image3 = IMG_Load("boss00.jpg");
+    image3 = IMG_Load("slave00.jpg");
     if (!image3){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
 
     SDL_Surface *image4;
-    image4 = IMG_Load("boss01.jpg");
+    image4 = IMG_Load("slave01.jpg");
     if (!image4){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
