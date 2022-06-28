@@ -24,13 +24,12 @@
 #define SIZE_X 650
 #define SIZE_Y 850
 
-
 typedef struct Nave Nave;
 typedef struct Misil Misil;
 typedef struct Punto Punto;
 typedef struct Entidad Entidad;
 typedef struct Usuario Usuario;
-void navePintar(Nave*,SDL_Renderer*,Entidad**,Usuario*);
+void navePintar(Nave*,SDL_Renderer*,Entidad**,Usuario*,int*,Entidad *,int *);
 void naveIzquierdaDerecha(Nave*);
 void naveDispara(Nave*);
 void misilAvanza(Misil *);
@@ -44,10 +43,7 @@ Entidad dameEnemigo(Entidad**);
 void iniciarMisiles();
 void dibujarMisilesEntidades(Entidad*,SDL_Renderer*,int*,Nave*,Usuario*);
 void asignarPuntaje(Usuario*,int);
-
-
-
-
+void misilAvanzaEntidad(Misil*);
 
 UINT64 Time();
 
@@ -184,7 +180,7 @@ List* obtenerRanking(){
     rank=fopen("rankings.txt","r");
     if(rank==NULL){
         printf("error al abrir el archivo\n");
-        exit (1);
+        return 1;
     }
 
 
@@ -227,6 +223,20 @@ Entidad ** memoriaMatriz(){
     return matriz;
 }
 
+Entidad *memoriaBoss(){
+    Entidad *boss = (Entidad*)malloc(sizeof(Entidad));
+    return boss;
+}
+
+void inicializarBoss(Entidad *boss){
+    boss->rectangulo.x = 280;
+    boss->rectangulo.y = 30;
+    boss->rectangulo.h = 80;
+    boss->rectangulo.w = 80;
+    boss->vida = 3;
+    boss->permitidoDisparar = true;
+}
+
 void inicializarEntidades(Entidad **matriz){
     int eje_x = 110;
     int eje_y = 100;
@@ -257,6 +267,152 @@ bool cooldown (Nave *nave){
     return false;
 }
 
+void parametrosBoss(Entidad *nave){
+    nave->misiles = NULL;
+    if (nave->permitidoDisparar == true){
+        if (nave->misiles == NULL){
+            nave->misiles = (Misil*)SDL_malloc(sizeof(Misil));
+            nave->misiles->x1 = nave->rectangulo.x + 40;
+            nave->misiles->y1 = nave->rectangulo.y;
+            nave->misiles->x2 = nave->rectangulo.x + 40;
+            nave->misiles->y2 = nave->rectangulo.y - 5;
+            nave->misiles->velocidad_x = 0;
+            nave->misiles->velocidad_y = -5;
+            nave->misiles->siguiente = NULL;
+        }
+        else{
+            Misil *auxMisil = nave->misiles;
+            while (auxMisil->siguiente != NULL){
+                auxMisil = auxMisil->siguiente;
+            }
+            auxMisil->siguiente = (Misil*)SDL_malloc(sizeof(Misil));
+            auxMisil = auxMisil->siguiente;
+            auxMisil->x1 = nave->rectangulo.x + 40;
+            auxMisil->y1 = nave->rectangulo.y;
+            auxMisil->x2 = nave->rectangulo.x + 40;
+            auxMisil->y2 = nave->rectangulo.y - 5;
+            auxMisil->velocidad_x = 0;
+            auxMisil->velocidad_y = -5;
+            auxMisil->siguiente = NULL;
+        }
+    }
+}
+
+float velocidadBoss(){
+    float time = Time() / 1000.f;
+    //AUMENTAR VELOCIDAD
+    if ((int)time > 5){
+        time *= 1.8;
+    }
+    if ((int)time > 10){
+        time *= 2.0;
+    }
+    if ((int)time > 15){
+        time *= 2.3;
+    }
+    if ((int)time > 30){
+        time *= 2.8;
+    }
+
+    return time;
+}
+
+void moverBossEjeX(Entidad*boss,int *direccionX){
+
+    if ((*direccionX) == 1){
+        boss->rectangulo.x += 8;
+    }
+    else{
+        boss->rectangulo.x -= 8;
+    }
+
+}
+
+void moverBossEjeY(Entidad*boss,int *direccionY){
+
+    if ((*direccionY) == 1){
+        boss->rectangulo.x -= 8;
+        //boss->rectangulo.y += 20;
+        if (boss->rectangulo.y >= 445 && boss->vida >= 0){
+            printf("[GAMEOVER]\n");
+        }
+    }
+    else{
+        boss->rectangulo.x += 8;
+        //boss->rectangulo.y += 20;
+        if (boss->rectangulo.y >= 445 && boss->vida >= 0){
+            printf("[GAMEOVER]\n");
+        }
+    }
+
+}
+
+void moverBoss(SDL_Rect *screenRectangle,Entidad *boss,int *cont,int *direccion_x,int *direccionY,int*inicio,SDL_Renderer *renderer,SDL_Texture*imagen1,SDL_Texture*imagen2){
+    float time = velocidadBoss();
+    if ((int)time % 2 == 0){
+            if ((*cont) % 2 != 0){
+                moverBossEjeX(boss,direccion_x);
+                (*cont)++;
+            }
+            //CASO INICIO
+            if ((*cont) == 36 && (*inicio) == 1){
+                moverBossEjeY(boss,direccionY);
+                (*direccion_x) *= -1;
+                (*cont) = 0;
+                (*inicio) = 0;
+            }
+            //CASO PROMEDIO
+            if ((*cont) == 70){
+                moverBossEjeY(boss,direccion_x);
+                (*direccion_x) *= -1;
+                (*cont) = 0;
+            }
+            if (boss->vida != 0){
+                SDL_RenderCopy(renderer,imagen1,screenRectangle,&boss->rectangulo);
+            }
+        }
+        else
+        {
+            if((*cont) % 2 == 0){
+                moverBossEjeX(boss,direccion_x);
+                (*cont)++;
+            }
+            //CASO INICIO
+            if ((*cont) == 36 && (*inicio) == 1){
+                moverBossEjeY(boss,direccionY);
+                (*direccion_x) *= -1;
+                (*cont) = 0;
+                (*inicio) = 0;
+            }
+            //CASO PROMEDIO
+            if ((*cont) == 70){
+                moverBossEjeY(boss,direccionY);
+                (*direccion_x) *= -1;
+                (*cont) = 0;
+            }
+            if (boss->vida != 0){
+                SDL_RenderCopy(renderer,imagen2,screenRectangle,&boss->rectangulo);
+            }
+        }
+}
+
+void dibujarMisilesBoss(Entidad *boss,Nave*naveUsuario,SDL_Renderer *renderer,Usuario *user,int *verificador){
+    Misil *auxMisil = boss->misiles;
+
+    while (auxMisil != NULL){
+        if (auxMisil->y1 >= 640){
+            (*verificador) = 0;
+        }
+        misilAvanzaEntidad(auxMisil);
+        SDL_RenderDrawLine(renderer,auxMisil->x1,auxMisil->y1,auxMisil->x2,auxMisil->y2);
+        SDL_RenderDrawLine(renderer,auxMisil->x1,auxMisil->y1,auxMisil->x2,auxMisil->y2);
+        colisionDisparo_Usuario(boss,naveUsuario,user);
+
+        auxMisil = auxMisil->siguiente;
+
+    }
+}
+
 void SDL(){
 
     Usuario *user = crearUsuario();
@@ -271,7 +427,7 @@ void SDL(){
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0){
         printf("ERROR\n");
-        exit(1);
+        return EXIT_FAILURE;
     }
 
     window = SDL_CreateWindow("Ventana",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ancho,largo,SDL_WINDOW_SHOWN);
@@ -308,27 +464,62 @@ void SDL(){
         printf("IMG_LOAD: %s",IMG_GetError());
     }
 
+    SDL_Surface *image3;
+    image3 = IMG_Load("boss00.jpg");
+    if (!image3){
+        printf("IMG_LOAD: %s",IMG_GetError());
+    }
+
+    SDL_Surface *image4;
+    image4 = IMG_Load("boss01.jpg");
+    if (!image4){
+        printf("IMG_LOAD: %s",IMG_GetError());
+    }
+
+
+
     SDL_Texture *imagen1 = SDL_CreateTextureFromSurface(renderer,image);
     SDL_Texture *imagen2 = SDL_CreateTextureFromSurface(renderer,image2);
+    SDL_Texture *imagen3 = SDL_CreateTextureFromSurface(renderer,image3);
+    SDL_Texture *imagen4 = SDL_CreateTextureFromSurface(renderer,image4);
 
     if (window == NULL){
         printf("ERROR");
-        exit(1);
+        return EXIT_FAILURE;
     }
 
     SDL_Rect screenRectangle = {0,0,580,640};
+
+    //MEMORIA ENTIDADES
     Entidad **matriz = memoriaMatriz();
+
+    //Inicializar Entidades
+    inicializarEntidades(matriz);
+
+
+    //Memoria Boss
+    Entidad *boss = memoriaBoss();
+
+    inicializarBoss(boss);
 
     int cont = 0;
     int direccion_x = 1;
     int direccion_y = 1;
     int inicio = 1;
+    int direccion_xBOSS = 1;
+    int direccion_yBOSS = 1;
+    int inicioBoss = 1;
 
-    //Inicializar
-    inicializarEntidades(matriz);
     int contador = 0;
+    int frecuenciaAparicionBoss = 0;
+    int bossTiempo = 0;
+    int contadorBoss = 0;
+    int verificador = 0;
+
     int frecuenciaDisparo;
     Entidad enemigo;
+
+    int numeroentidades = 55;
 
     float timeGlobal = Time() / 1000.f;
 
@@ -355,6 +546,8 @@ void SDL(){
                 }
             }
             frecuenciaDisparo = rand() % MAX;
+            frecuenciaAparicionBoss = rand() % MAX;
+
 
             borrarMisiles(&nave);
 
@@ -364,13 +557,14 @@ void SDL(){
 
             SDL_RenderClear(renderer);
 
-            moverEntidades(renderer,imagen1,imagen2,&screenRectangle,matriz,&cont,&direccion_x,&direccion_y,&inicio);
-
+            if (numeroentidades != 0){
+                moverEntidades(renderer,imagen1,imagen2,&screenRectangle,matriz,&cont,&direccion_x,&direccion_y,&inicio);
+            }
             SDL_SetRenderDrawColor(renderer,0,255,12,0);
 
-            navePintar(&nave,renderer,matriz,user);
+            navePintar(&nave,renderer,matriz,user,&contadorBoss,boss,&numeroentidades);
             if (contador == 0){
-                if (frecuenciaDisparo < 200){
+                if (frecuenciaDisparo < 200 && numeroentidades != 0){
                     enemigo = dameEnemigo(matriz);
                     contador++;
                 }
@@ -378,6 +572,24 @@ void SDL(){
 
             if (contador > 0){
                 dibujarMisilesEntidades(&enemigo,renderer,&contador,&nave,user);
+            }
+
+            //BOSS
+            if (frecuenciaAparicionBoss < 50 && contadorBoss == 0){
+                contadorBoss++;
+            }
+
+            if (contadorBoss != 0){
+                moverBoss(&screenRectangle,boss,&bossTiempo,&direccion_xBOSS,&direccion_yBOSS,&inicioBoss,renderer,imagen3,imagen4);
+                if (rand() % 1000 < 10){
+                    if (verificador == 0){
+                        parametrosBoss(boss);
+                    }
+                    verificador++;
+                }
+                if (verificador != 0){
+                    dibujarMisilesBoss(boss,&nave,renderer,user,&verificador);
+                }
             }
 
             dibujarlineaInferior(&linea,renderer);
@@ -392,7 +604,10 @@ void SDL(){
     SDL_FreeSurface(image2);
     SDL_DestroyTexture(imagen1);
     SDL_DestroyTexture(imagen2);
+    SDL_DestroyTexture(imagen3);
+    SDL_DestroyTexture(imagen4);
     SDL_Quit();
+
     IMG_Quit();
 }
 
@@ -539,7 +754,12 @@ void asignarPuntaje(Usuario *user,int i){
     printf("Puntaje: %d\n",user->puntaje);
 }
 
-void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave *nave){
+void asignarPuntajeBoss(Usuario *user){
+    user->puntaje += 1500;
+    printf("Puntaje: %d\n",user->puntaje);
+}
+
+void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave *nave,int *numeroentidades){
     int coordenadaEjeX,coordenadaEjeY;
 
     for (int i = 0 ; i < 5 ; i++){
@@ -549,8 +769,8 @@ void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave
                 coordenadaEjeY = matriz[i][j].rectangulo.y;
 
                 if (matriz[i][j].vida != 0){
-                    if (coordenadaEjeX <= auxMisil->x1 && coordenadaEjeX+25 >= auxMisil->x1){
-                        if (coordenadaEjeY <= auxMisil->y1 && coordenadaEjeY+25 >= auxMisil->y1){
+                    if (coordenadaEjeX <= auxMisil->x1 && coordenadaEjeX+40 >= auxMisil->x1){
+                        if (coordenadaEjeY <= auxMisil->y1 && coordenadaEjeY+40 >= auxMisil->y1){
                              //ASIGNAR PUNTAJE
                              asignarPuntaje(user,i);
 
@@ -562,7 +782,8 @@ void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave
 
                             matriz[i][j].vida = 0;
                             matriz[i][j].permitidoDisparar = false;
-
+                            (*numeroentidades)--;
+                            printf("Numero entidades: %d\n",(*numeroentidades));
                             if (auxMisil->siguiente != NULL){
                                 auxMisil->siguiente->x1 = 0;
                                 auxMisil->siguiente->y1 = 0;
@@ -576,7 +797,47 @@ void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave
         }
 }
 
-void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user){
+void colisionDisparo_Boss(int *contadorBoss,Entidad *boss,Misil *auxMisil,Usuario *user){
+    int coordenadaEjeX,coordenadaEjeY;
+    coordenadaEjeX = boss->rectangulo.x;
+    coordenadaEjeY = boss->rectangulo.y;
+
+    if (boss->vida != 0){
+        if (coordenadaEjeX <= auxMisil->x1 && coordenadaEjeX+70 >= auxMisil->x1){
+            if (coordenadaEjeY <= auxMisil->y1 && coordenadaEjeY+50 >= auxMisil->y1){
+                printf("[IMPACTO BOSS]\n");
+                //ELIMINAR
+                auxMisil->x1 = 0;
+                auxMisil->y1 = 0;
+                auxMisil->x2 = 0;
+                auxMisil->y2 = 0;
+
+                boss->vida -= 1;
+                if (boss->vida == 0){
+                    contadorBoss = 0;
+                    boss->permitidoDisparar = false;
+                    boss->rectangulo.x = 0;
+                    boss->rectangulo.y = 0;
+                    boss->rectangulo.h = 0;
+                    boss->rectangulo.w = 0;
+                    //ASIGNAR PUNTAJE
+                    asignarPuntajeBoss(user);
+                    //ANIMACION DESTRUCCION (?)
+
+                }
+
+                if (auxMisil->siguiente != NULL){
+                    auxMisil->siguiente->x1 = 0;
+                    auxMisil->siguiente->y1 = 0;
+                    auxMisil->siguiente->x2 = 0;
+                    auxMisil->siguiente->y2 = 0;
+                }
+            }
+        }
+    }
+}
+
+void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user,int *contadorBoss,Entidad *boss,int *numeroentidades){
     SDL_Point points[8] = {
         {nave->x1,nave->y1},
         {nave->x2,nave->y2},
@@ -600,7 +861,12 @@ void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user)
         SDL_RenderDrawLine(renderer,auxMisil->x1,auxMisil->y1,auxMisil->x2,auxMisil->y2);
 
         //Colisiones
-        colisionDisparo_Entidad(auxMisil,matriz,user,nave);
+        colisionDisparo_Entidad(auxMisil,matriz,user,nave,numeroentidades);
+
+        //COLISION BOSS
+        if ((*contadorBoss) != 0){
+            colisionDisparo_Boss(contadorBoss,boss,auxMisil,user);
+        }
         auxMisil = auxMisil->siguiente;
     }
 }
@@ -702,7 +968,6 @@ void dibujarlineaInferior(Punto *punto,SDL_Renderer *renderer){
     SDL_RenderDrawLines(renderer,points,3);
 }
 
-
 void mover_ejeX(Entidad **matriz,int *direccion_x){
     for(int i = 0 ; i < 5 ; i++){
         for (int j = 0 ; j < 11; j++){
@@ -769,7 +1034,6 @@ float velocidadEntidades(){
     }
     return time;
 }
-
 
 void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **matriz,int*cont,int *direccion_x,int *direccion_y,int *inicio){
 
@@ -843,6 +1107,7 @@ void Menu(){
     printf("---->");
 
 
+
     while (1){
         Sleep(200);
         if(GetAsyncKeyState(VK_UP)){
@@ -865,7 +1130,6 @@ void Menu(){
     }
     printf("\n\n\n\n");
     if (menu == 1){
-        
         SDL();
     }
     if (menu == 2){
@@ -905,15 +1169,8 @@ UINT64 Time(){
     return SDL_GetTicks64();
 }
 
-void moverEntidadDerecha(){
-
-}
-
 int main(int argc, char **argv){
 
     Menu();
     return EXIT_SUCCESS;
 }
-
-
-
