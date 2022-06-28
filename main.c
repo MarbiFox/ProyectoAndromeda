@@ -179,7 +179,7 @@ List* obtenerRanking(){
     rank=fopen("rankings.txt","r");
     if(rank==NULL){
         printf("error al abrir el archivo\n");
-        return 1;
+        exit (1);
     }
 
 
@@ -266,7 +266,7 @@ void SDL(){
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0){
         printf("ERROR\n");
-        return EXIT_FAILURE;
+        exit(1);
     }
 
     window = SDL_CreateWindow("Ventana",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ancho,largo,SDL_WINDOW_SHOWN);
@@ -308,7 +308,7 @@ void SDL(){
 
     if (window == NULL){
         printf("ERROR");
-        return EXIT_FAILURE;
+        exit(1);
     }
 
     SDL_Rect screenRectangle = {0,0,580,640};

@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "D:/Development/SDL2-2.0.22/x86_64-w64-mingw32/include",
-                "D:/Development/SDL2-2.0.22/x86_64-w64-mingw32/lib"
+                "D:/Development/SDL2-2.0.22/x86_64-w64-mingw32/lib",
+                "C:\\Users\\benja\\Desktop\\ProyectoAndromeda\\source\\include",
+                "C:\\Users\\benja\\Desktop\\ProyectoAndromeda\\source\\lib"
             ],
             "defines": [
                 "_DEBUG",
