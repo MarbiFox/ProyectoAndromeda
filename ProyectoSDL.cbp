@@ -38,6 +38,8 @@
 			<Add library="SDL2" />
 			<Add directory="../../SDL2-2.0.22/x86_64-w64-mingw32/lib" />
 		</Linker>
+		<Unit filename="boss00.jpg" />
+		<Unit filename="boss01.jpg" />
 		<Unit filename="galak00.jpg" />
 		<Unit filename="galak01.jpg" />
 		<Unit filename="invader.jpg" />
