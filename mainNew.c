@@ -30,26 +30,28 @@ typedef struct Misil Misil;
 typedef struct Punto Punto;
 typedef struct Entidad Entidad;
 typedef struct Usuario Usuario;
-void navePintar(Nave*,SDL_Renderer*,Entidad**,Usuario*);
+void navePintar(Nave*,SDL_Renderer*,Entidad**,Usuario*,int,int);
 void naveIzquierdaDerecha(Nave*);
 void naveDispara(Nave*);
 void misilAvanza(Misil *);
 void borrarMisiles(Nave *);
 void dibujarlineaInferior(Punto *,SDL_Renderer *);
-void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect* ,Entidad**,int*,int*,int*,int*);
+void moverEntidades(SDL_Renderer *,SDL_Texture *,SDL_Texture *,SDL_Rect* ,Entidad**,int,int,int*,int*,int*,int*);
 void entidadMover();
 void moverEntidadDerecha();
 void goy(int);
-Entidad dameEnemigo(Entidad**);
+Entidad dameEnemigo(Entidad**,int,int);
 void iniciarMisiles();
 void dibujarMisilesEntidades(Entidad*,SDL_Renderer*,int*,Nave*,Usuario*);
 void asignarPuntaje(Usuario*,int);
+
 
 //funciones nuevas
 Entidad **crearMatrizEntidad(int, int);
 Nivel *createLevel(int ,int *);
 List * GenerarNiveles(void);
 void mostrarInformacionNiveles(List *);
+void SDL(Entidad **,int, int);
 
 
 struct Nivel{
@@ -268,7 +270,7 @@ bool cooldown (Nave *nave){
     return false;
 }
 
-void SDL(){
+void SDL(Entidad **matriz, int Largo_x, int Largo_y){
 
     Usuario *user = crearUsuario();
     SDL_Window *window = NULL;
@@ -328,7 +330,9 @@ void SDL(){
     }
 
     SDL_Rect screenRectangle = {0,0,580,640};
-    Entidad **matriz = memoriaMatriz();
+
+
+    //Entidad **matriz = memoriaMatriz();
 
     int cont = 0;
     int direccion_x = 1;
@@ -336,7 +340,7 @@ void SDL(){
     int inicio = 1;
 
     //Inicializar
-    inicializarEntidades(matriz);
+    //inicializarEntidades(matriz);
     int contador = 0;
     int frecuenciaDisparo;
     Entidad enemigo;
@@ -374,15 +378,15 @@ void SDL(){
             SDL_SetRenderDrawColor(renderer,0,0,0,0);
 
             SDL_RenderClear(renderer);
-
-            moverEntidades(renderer,imagen1,imagen2,&screenRectangle,matriz,&cont,&direccion_x,&direccion_y,&inicio);
+            //tiene matriz-modificacion interna lista
+            moverEntidades(renderer,imagen1,imagen2,&screenRectangle,matriz,Largo_x,Largo_y,&cont,&direccion_x,&direccion_y,&inicio);
 
             SDL_SetRenderDrawColor(renderer,0,255,12,0);
-
-            navePintar(&nave,renderer,matriz,user);
+            //tiene matriz
+            navePintar(&nave,renderer,matriz,user,Largo_x,Largo_y);
             if (contador == 0){
                 if (frecuenciaDisparo < 200){
-                    enemigo = dameEnemigo(matriz);
+                    enemigo = dameEnemigo(matriz,Largo_x,Largo_y);
                     contador++;
                 }
             }
@@ -502,12 +506,12 @@ void iniciarMisiles(Entidad *nave){
     }
 }
 
-Entidad dameEnemigo(Entidad **matriz){
+Entidad dameEnemigo(Entidad **matriz,int Largo_x,int Largo_y){
     int a,b;
     //iniciar misiles
     while(1){
-        a = rand() % MAXVALORFILAS;
-        b = rand() % MAXVALORCOLUMNAS;
+        a = rand() % Largo_x;
+        b = rand() % Largo_y;
         if (matriz[a][b].permitidoDisparar == true){
             break;
         }
@@ -550,11 +554,11 @@ void asignarPuntaje(Usuario *user,int i){
     printf("Puntaje: %d\n",user->puntaje);
 }
 
-void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave *nave){
+void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,int Largo_x,int Largo_y,Usuario *user,Nave *nave){
     int coordenadaEjeX,coordenadaEjeY;
 
-    for (int i = 0 ; i < 5 ; i++){
-            for (int j = 0 ; j < 11 ; j++){
+    for (int i = 0 ; i < Largo_x ; i++){
+            for (int j = 0 ; j < Largo_y ; j++){
 
                 coordenadaEjeX = matriz[i][j].rectangulo.x;
                 coordenadaEjeY = matriz[i][j].rectangulo.y;
@@ -587,7 +591,8 @@ void colisionDisparo_Entidad(Misil *auxMisil,Entidad **matriz,Usuario *user,Nave
         }
 }
 
-void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user){
+
+void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user,int Largo_x,int Largo_y){
     SDL_Point points[8] = {
         {nave->x1,nave->y1},
         {nave->x2,nave->y2},
@@ -611,7 +616,7 @@ void navePintar(Nave *nave,SDL_Renderer *renderer,Entidad**matriz,Usuario *user)
         SDL_RenderDrawLine(renderer,auxMisil->x1,auxMisil->y1,auxMisil->x2,auxMisil->y2);
 
         //Colisiones
-        colisionDisparo_Entidad(auxMisil,matriz,user,nave);
+        colisionDisparo_Entidad(auxMisil,matriz,Largo_x,Largo_y,user,nave);
         auxMisil = auxMisil->siguiente;
     }
 }
@@ -714,9 +719,9 @@ void dibujarlineaInferior(Punto *punto,SDL_Renderer *renderer){
 }
 
 
-void mover_ejeX(Entidad **matriz,int *direccion_x){
-    for(int i = 0 ; i < 5 ; i++){
-        for (int j = 0 ; j < 11; j++){
+void mover_ejeX(Entidad **matriz,int *direccion_x,int Largo_x,int Largo_y){
+    for(int i = 0 ; i < Largo_x ; i++){
+        for (int j = 0 ; j < Largo_y; j++){
             if ((*direccion_x) == 1){
                 matriz[i][j].rectangulo.x += 8;
             }
@@ -727,9 +732,9 @@ void mover_ejeX(Entidad **matriz,int *direccion_x){
     }
 }
 
-void mover_ejeY(Entidad **matriz,int *direccion_x){
-    for (int i = 0 ; i < 5 ; i++){
-        for (int j = 0 ; j < 11 ; j++){
+void mover_ejeY(Entidad **matriz,int *direccion_x,int Largo_x,int Largo_y){
+    for (int i = 0 ; i < Largo_x ; i++){
+        for (int j = 0 ; j < Largo_y ; j++){
             if ((*direccion_x) == 1){
                 matriz[i][j].rectangulo.x -= 8;
                 matriz[i][j].rectangulo.y += 10;
@@ -782,26 +787,27 @@ float velocidadEntidades(){
 }
 
 
-void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **matriz,int*cont,int *direccion_x,int *direccion_y,int *inicio){
+void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *imagen2,SDL_Rect *screenRectangle,Entidad **matriz,int Largo_x,int Largo_y,int*cont,int *direccion_x,int *direccion_y,int *inicio){
 
     float time = velocidadEntidades();
-    for (int i = 0 ; i < 5 ; i++){
-        for (int j = 0 ; j < 11 ; j++){
+    for (int i = 0 ; i < Largo_x ; i++){
+        for (int j = 0 ; j < Largo_y ; j++){
             if ((int)time % 2 == 0){
                 if((*cont) % 2 != 0){
-                    mover_ejeX(matriz,direccion_x);
+                    //
+                    mover_ejeX(matriz,direccion_x,Largo_x,Largo_y);
                     (*cont)++;
                 }
                 //CASO INICIO
                 if ((*cont) == 12 && (*inicio) == 1){
-                    mover_ejeY(matriz,direccion_x);
+                    mover_ejeY(matriz,direccion_x,Largo_x,Largo_y);
                     (*direccion_x) *= -1;
                     (*cont) = 0;
                     (*inicio) = 0;
                 }
                 //CASO PROMEDIO
                 if ((*cont) == 24){
-                    mover_ejeY(matriz,direccion_x);
+                    mover_ejeY(matriz,direccion_x,Largo_x,Largo_y);
                     (*direccion_x) *= -1;
                     (*cont) = 0;
                 }
@@ -812,19 +818,19 @@ void moverEntidades(SDL_Renderer *renderer,SDL_Texture *imagen1,SDL_Texture *ima
             else
             {
                 if((*cont) % 2 == 0){
-                    mover_ejeX(matriz,direccion_x);
+                    mover_ejeX(matriz,direccion_x,Largo_x,Largo_y);
                     (*cont)++;
                 }
                 //CASO INICIO
                 if ((*cont) == 12 && (*inicio) == 1){
-                    mover_ejeY(matriz,direccion_x);
+                    mover_ejeY(matriz,direccion_x,Largo_x,Largo_y);
                     (*direccion_x) *= -1;
                     (*cont) = 0;
                     (*inicio) = 0;
                 }
                 //CASO PROMEDIO
                 if ((*cont) == 24){
-                    mover_ejeY(matriz,direccion_x);
+                    mover_ejeY(matriz,direccion_x,Largo_x,Largo_y);
                     (*direccion_x) *= -1;
                     (*cont) = 0;
                 }
@@ -853,7 +859,6 @@ void Menu(){
     goy(LineaDeInicio);
     printf("---->");
 
-    List *niveles = GenerarNiveles();
 
     while (1){
         Sleep(200);
@@ -876,9 +881,18 @@ void Menu(){
         }
     }
     printf("\n\n\n\n");
+
+    List *niveles = GenerarNiveles();
     if (menu == 1){
         mostrarInformacionNiveles(niveles);
-        //SDL();
+
+        //Recorre los 8 niveles generados previamente
+        
+        Nivel *aux = firstList(niveles);
+        while(aux){
+            SDL(aux->enemigo,aux->x,aux->y);
+            aux = nextList(niveles);
+        }
     }
     if (menu == 2){
         system("pause");
@@ -929,8 +943,51 @@ int main(int argc, char **argv){
 
 
 
-Entidad **crearMatrizEntidad(int x, int i){
-    return NULL;
+Entidad **crearMatrizEntidad(int x, int y){
+    Entidad **matriz = (Entidad**)malloc(x * sizeof(Entidad*));
+    int i,j;
+    int eje_x;
+    int eje_y;
+    for (int i = 0 ; i < x ; i++){
+        matriz[i] = (Entidad*)malloc(y * sizeof(Entidad));
+    }
+    
+    if(y = 9){
+        eje_x = 150;
+        eje_y = 100;
+        for(i = 0 ; i < x ; i++){
+            for (int j = 0 ; j < y ; j++){
+                matriz[i][j].rectangulo.x = eje_x;
+                matriz[i][j].rectangulo.y = eje_y;
+                matriz[i][j].rectangulo.h = 25;
+                matriz[i][j].rectangulo.w = 25;
+                matriz[i][j].vida = 1;
+                matriz[i][j].permitidoDisparar = true;
+                eje_x += 40;
+            }
+        }
+        eje_x = 150;
+        eje_y += 50;
+    }
+    if(y = 11){
+        eje_x = 110;
+        eje_y = 100;
+        for(i = 0 ; i < x ; i++){
+            for (int j = 0 ; j < y ; j++){
+                matriz[i][j].rectangulo.x = eje_x;
+                matriz[i][j].rectangulo.y = eje_y;
+                matriz[i][j].rectangulo.h = 25;
+                matriz[i][j].rectangulo.w = 25;
+                matriz[i][j].vida = 1;
+                matriz[i][j].permitidoDisparar = true;
+                eje_x += 40;
+            }
+            eje_x = 110;
+            eje_y += 50;
+        }
+    }
+
+    return matriz;
 }
 
 Nivel *createLevel(int nivel,int *cont){
@@ -980,4 +1037,5 @@ void mostrarInformacionNiveles(List *lista){
     }
     system("pause");
 }
+
 
