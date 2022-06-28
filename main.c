@@ -24,7 +24,7 @@
 #define SIZE_X 650
 #define SIZE_Y 850
 
-typedef struct Nivel Nivel;
+
 typedef struct Nave Nave;
 typedef struct Misil Misil;
 typedef struct Punto Punto;
@@ -45,19 +45,8 @@ void iniciarMisiles();
 void dibujarMisilesEntidades(Entidad*,SDL_Renderer*,int*,Nave*,Usuario*);
 void asignarPuntaje(Usuario*,int);
 
-//funciones nuevas
-Entidad **crearMatrizEntidad(int, int);
-Nivel *createLevel(int ,int *);
-List * GenerarNiveles(void);
-void mostrarInformacionNiveles(List *);
 
 
-struct Nivel{
-    Entidad **enemigo;
-    int x,y;
-    int nivel;
-    int enemigos;
-};
 
 
 UINT64 Time();
@@ -853,7 +842,6 @@ void Menu(){
     goy(LineaDeInicio);
     printf("---->");
 
-    List *niveles = GenerarNiveles();
 
     while (1){
         Sleep(200);
@@ -877,8 +865,8 @@ void Menu(){
     }
     printf("\n\n\n\n");
     if (menu == 1){
-        mostrarInformacionNiveles(niveles);
-        //SDL();
+        
+        SDL();
     }
     if (menu == 2){
         system("pause");
@@ -928,56 +916,4 @@ int main(int argc, char **argv){
 }
 
 
-
-Entidad **crearMatrizEntidad(int x, int i){
-    return NULL;
-}
-
-Nivel *createLevel(int nivel,int *cont){
-    Nivel *newLevel = (Nivel*) malloc(sizeof(Nivel));
-    newLevel->nivel = nivel+1;
-
-    if(nivel % 2 == 0){
-        (*cont)++;
-        newLevel->enemigo = crearMatrizEntidad(*cont,9);
-        newLevel->x = *cont;
-        newLevel->y = 9;
-        newLevel->enemigos = *cont * 9;
-        return newLevel;
-    }
-    else{
-        newLevel->enemigo = crearMatrizEntidad(*cont,11);
-        newLevel->x = *cont;
-        newLevel->y = 11;
-        newLevel->enemigos = *cont * 11;
-        return newLevel;
-    }
-    
-    return NULL;
-}
-
-List * GenerarNiveles(){
-    List *NivelesTotales = createList();
-    int cont = 1; //para verificar un aumeto par de la matriz
-    int i;
-    int k = 8;
-    for(i = 0 ; i < k ; i++){
-        pushBack(NivelesTotales,createLevel(i,&cont));
-    }
-    return NivelesTotales;
-}
-
-void mostrarInformacionNiveles(List *lista){
-    Nivel *aux = firstList(lista);
-    while(aux){
-        printf("------------------------------\n");
-        printf("Nivel: %i\n",aux->nivel);
-        printf("X: %i\n",aux->x);
-        printf("y: %i\n",aux->y);
-        printf("cantidad de enemigos: %i\n",aux->enemigos);
-        printf("------------------------------\n");
-        aux = nextList(lista);
-    }
-    system("pause");
-}
 
