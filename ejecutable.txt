@@ -1,1 +1,3 @@
-gcc -I source/include -L source/lib main.c list.c -o main.exe -lmingw32 -lSDL2main -lSDL2
+Para compilar colocar el siguiente comando:
+
+gcc -I source/include -L source/lib menu.c list.c -o main.exe -lmingw32 -lSDL2main -lSDL2 -lSDL2_image

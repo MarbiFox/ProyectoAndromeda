@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <assert.h>
 #include "main.c"
+#include "list.h"
 
 //Función carga una imagen y la ajusta a las proporciones de la ventana.
 SDL_Surface * optimizeSurface (char * filePath, SDL_Surface * mSurface) {
@@ -31,8 +32,15 @@ SDL_Surface * optimizeSurface (char * filePath, SDL_Surface * mSurface) {
 void startOption (int option, bool * runGame) {
     switch (option)
     {
-    case 1:
-        startGame();
+    case 1:;
+        List * levels = GenerarNiveles(); //Genera Niveles.
+        mostrarInformacionNiveles(levels); //Recorre Niveles.
+        Nivel * aux = firstList(levels);
+        while(aux){
+            startGame(aux->enemigo,aux->x,aux->y,aux->nivel, levels);
+            aux = nextList(levels);
+        }
+        // startGame(); //Inicia Ventana de Juego.
         break;
     case 2:
         // showRankings();
@@ -178,6 +186,7 @@ void createMenu () {
 
     //Cerrar SDL.
     SDL_Quit();
+    IMG_Quit();
 }
 
 int main(int argc, char** argv){
