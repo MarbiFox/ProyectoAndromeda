@@ -34,7 +34,8 @@ void startOption (int option, bool * runGame) {
     {
     case 1:;
         List * levels = GenerarNiveles(); //Genera Niveles.
-        mostrarInformacionNiveles(levels); //Recorre Niveles.
+        // system("pause"); //Función Opcional.
+        // mostrarInformacionNiveles(levels); //Función Opcional.
         Nivel * aux = firstList(levels);
         while(aux){
             startGame(aux->enemigo,aux->x,aux->y,aux->nivel, levels);
