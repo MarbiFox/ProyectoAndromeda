@@ -7,10 +7,7 @@
 #include <assert.h>
 #include "list.h"
 
-typedef struct{
-    char user[4];
-    int puntaje;
-}Usuario;
+
 
 unsigned int convertNum(char *val){
 
@@ -99,14 +96,14 @@ List* obtenerRanking(){
 
     FILE *rank;
     rank=fopen("rankings.txt","r");
+
     if(rank==NULL){
         printf("error al abrir el archivo\n");
-        return 1;
+        exit(1);
     }
 
     
     char* alias=buscarPalabra(rank);
-    int score=0;
     
 
     while (alias) {
@@ -115,6 +112,7 @@ List* obtenerRanking(){
 
         strcpy(d->user,alias);
         d->puntaje=convertNum(buscarPalabra(rank));
+        d->nivel=convertNum(buscarPalabra(rank));
 
         insertarListaRanking(l,d);
 
@@ -124,4 +122,24 @@ List* obtenerRanking(){
     fclose(rank);
     return l;
 
+}
+
+void exportarRanking(List *l){
+
+    FILE * salida;
+    salida = fopen("rankings.txt", "w");
+
+    if (salida == NULL) {
+        printf("Error al abrir archivo.txt\n");
+        exit(1);
+    }
+
+    Usuario *val= firstList(l);
+    
+    while(val != NULL){
+        fprintf(salida,"%s %i %i\n",val->user,val->puntaje,val->nivel);
+        val = nextList(l);
+    }
+
+    fclose(salida);
 }
